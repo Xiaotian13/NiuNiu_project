@@ -1,0 +1,96 @@
+---
+title: "Untitled"
+author: "李孔雯"
+date: "2019/11/8"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+一、画图准备
+（三个时间段要跑三次哦）
+
+1.设置路径
+```{r}
+getwd()
+setwd("C:/Users/u305/Documents")
+```
+
+2.读取xlsx文件（不能转换成csv，小数点后面会自己约掉导致结果不准确）
+i.先安装读取xlsx的包
+```{r}
+install.packages("openxlsx")
+library(openxlsx)
+```
+
+ii.读取xlsx(此处三次不同数据的数据集名字要改）(读取之前国债收益率名字改成y，后面lm要用到)
+```{r}
+data0409<-read.xlsx("04-09.xlsx",sheet=1)
+```
+
+3.数据初步处理
+i.令时间列为行名，并去掉时间列(此处三次不同数据的数据集名字要改）
+```{r}
+rownames(data0409)=data0409[,1]
+data0409<-data0409[,-1]
+head(data0409)
+```
+
+ii.归一化(此处三次不同数据的数据集名字要改）：
+```{r}
+i1<-1:18
+j1<-1:67
+for(i in i1){
+  meani<-mean(data0409[j1,i])
+  maxi<-max(data0409[j1,i])
+  mini<-min(data0409[j1,i])
+  for(j in j1){
+    data0409[j,i]<-2*(data0409[j,i]-mini)/(maxi-mini)-1
+  }
+}
+```
+
+```{r}
+head(data0409)
+```
+
+
+3.分训练集和测试集
+```{r}
+train1<-data0409[1:59,]
+test1<-data0409[60:67,]
+```
+
+i.用train跑多元(此处三次不同数据的数据集名字要改、行数要改）
+```{r}
+lm.fit1<-lm(y~.,data=train1)
+summary(lm.fit1)
+
+```
+
+
+2.用test测试
+```{r}
+predict<-predict(lm.fit1,newdata=test1)
+predict
+```
+
+
+二、记录变量显著性
+lm
+```{r}
+lm.fit1<-lm(y~.,data=data0409)
+summary(lm.fit1)
+```
+
+ridge
+```{r}
+
+```
+
+lasso
+```{r}
+
+```
+

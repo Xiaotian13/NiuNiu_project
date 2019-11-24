@@ -1,0 +1,172 @@
+---
+title: "Ridge&Lasso"
+author: "Kuhlvan"
+date: "2019/11/16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+getwd()
+setwd("C:/Users/u305/Documents")
+```
+
+
+```{r}
+library(openxlsx)
+data<-read.xlsx("16-19.xlsx",sheet=1)
+head(data)
+#data<-data[,-1]
+#head(data)
+```
+
+```{r}
+rownames(data)=data[,1]
+data<-data[,-1]
+head(data)
+```
+
+ii.归一化(此处三次不同数据的数据集名字要改）：
+```{r}
+i1<-1:19
+j1<-1:45
+for(i in i1){
+  meani<-mean(data[j1,i])
+  maxi<-max(data[j1,i])
+  mini<-min(data[j1,i])
+  for(j in j1){
+    data[j,i]<-2*(data[j,i]-mini)/(maxi-mini)-1
+  }
+}
+```
+
+```{r}
+head(data)
+```
+
+```{r}
+lm.fit1<-lm(y~.,data=data)
+summary(lm.fit1)
+```
+
+```{r}
+y <- data$y
+x <- model.matrix(y ~., data)[, -1]
+head(x)
+```
+
+```{r}
+#install.packages("glmnet")
+library(glmnet)
+```
+```{r}
+set.seed(1)
+cv.out<-cv.glmnet(x, y, alpha = 0)
+bestlam<-cv.out$lambda.min
+bestlam
+```
+```{r}
+coef(cv.out, s = "lambda.min")
+```
+
+```{r}
+ridge.mod <- glmnet(x, y, alpha = 0, lambda = bestlam)
+ridge.mod
+```
+
+```{r}
+#install.packages("ridge")
+library(ridge)
+mymod <- linearRidge(y ~ ., data=data)
+
+summary(mymod)
+(mymod)
+```
+```{r}
+#install.packages("MASS")
+#library('MASS')
+#r<-lm.ridge(y ~ ., data=data)
+#r
+```
+
+```{r}
+set.seed(1)
+cv.out2 <- cv.glmnet(x, y, alpha = 1)
+bestlam2 <- cv.out$lambda.min
+bestlam2
+```
+
+```{r}
+
+mymod <- linearRidge(y ~ ., data=data,lambda = bestlam)
+
+summary(mymod)
+```
+
+```{r}
+#install.packages("lars")
+#library(lars)
+y <- data$y
+x <- model.matrix(y ~., data)[, -1]
+
+a<-lars(x,y,type="lasso")
+(a)Call:
+lars(x = x, y = y, type = "lasso")
+R-squared: 0.942 
+Sequence of LASSO moves:
+     DR007 PPI同比增长 `进口金额:累计同比` `出口金额:累计同比` 美国道琼斯指数 摩根大通pmi指数 `美元兑人民币：平均汇率`
+Var     18          14                   7                   8              3               6                        1
+Step     1           2                   3                   4              5               6                        7
+     社会融资规模存量同比增速 `美元兑人民币：平均汇率` 摩根大通pmi指数 社会消费品零售总额同比增长 m2同比增长 m1同比增长
+Var                        15                       -1              -6                         11         17         16
+Step                        8                        9              10                         11         12         13
+     房地产开发投资累计同比 `美元兑人民币：平均汇率` PPI同比增长 CPI同比增长 摩根大通pmi指数 Libor7天 工业增加值同比
+Var                      10                        1         -14          13               6        2             12
+Step                     14                       15          16          17              18       19             20
+     固定资产投资累计同比 `1年期美国国债利率` 美国联邦基金利率 `1年期美国国债利率` `1年期美国国债利率` 工业增加值同比
+Var                     9                   4                5                  -4                   4            -12
+Step                   21                  22               23                  24                  25             26
+     PPI同比增长 工业增加值同比 `出口金额:累计同比` `出口金额:累计同比`
+Var           14             12                  -8                   8
+Step          27             28                  29                  30
+LARS/LASSO
+Call: lars(x = x, y = y, type = "lasso")
+   Df     Rss       Cp
+0   1 15.2884 403.2094
+1   2  9.6123 239.5471
+2   3  8.7624 216.7403
+3   4  3.9955  79.6138
+4   5  3.5148  67.5847
+5   6  3.3688  65.3217
+6   7  3.2870  64.9349
+7   8  3.2254  65.1359
+8   9  2.7432  53.0625
+9   8  2.6780  49.1598
+10  7  1.6698  17.7348
+11  8  1.6604  19.4613
+12  9  1.4490  15.2909
+13 10  1.1453   8.4267
+14 11  1.1337  10.0879
+15 12  1.1282  11.9269
+16 11  1.0969   9.0130
+17 12  1.0887  10.7743
+18 13  1.0845  12.6538
+19 14  1.0009  12.2133
+20 15  0.9755  13.4715
+21 16  0.9548  14.8657
+22 17  0.9543  16.8534
+23 18  0.9428  18.5169
+24 17  0.9050  15.4135
+25 18  0.9002  17.2739
+26 17  0.8994  15.2507
+27 18  0.8981  17.2114
+28 19  0.8953  19.1294
+29 18  0.8934  17.0753
+30 19  0.8908  19.0000
+summary(a)
+```
+
+
